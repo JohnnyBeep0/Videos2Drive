@@ -21,7 +21,7 @@ def get_gmail_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('/Users/johnbhaskar/Desktop/videos2drive/credentials.v2.videodrive.json', GMAIL_SCOPES)   #my credentials and scopes
+            flow = InstalledAppFlow.from_client_secrets_file('YOUR CREDENTIALS FILE', GMAIL_SCOPES)   #my credentials and scopes
             creds = flow.run_local_server(port=0)
         with open('token_gmail.pickle', 'wb') as token:
             pickle.dump(creds, token)
@@ -72,7 +72,7 @@ def get_drive_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('/Users/johnbhaskar/Desktop/videos2drive/credentials.v2.videodrive.json', DRIVE_SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file('YOUR CREDENTIALS FILE', DRIVE_SCOPES) #PUT YOUR CREDENTIAL FILE HERE
             creds = flow.run_local_server(port=0)
         with open('token_drive.pickle', 'wb') as token:
             pickle.dump(creds, token)
