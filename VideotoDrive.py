@@ -8,7 +8,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 
 # Setup the Gmail API
-GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 #GMAIL SCRAPING
 #get gmail service first
@@ -21,7 +21,7 @@ def get_gmail_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('YOUR CREDENTIALS FILE', GMAIL_SCOPES)   #my credentials and scopes
+            flow = InstalledAppFlow.from_client_secrets_file('/Users/johnbhaskar/Desktop/videos2drive/credentials.v2.videodrive.json', GMAIL_SCOPES)   #my credentials and scopes
             creds = flow.run_local_server(port=0)
         with open('token_gmail.pickle', 'wb') as token:
             pickle.dump(creds, token)
@@ -30,7 +30,7 @@ def get_gmail_service():
 
 #create a list of messages in inbox
 def list_messages(service, user_id='me'):
-    results = service.users().messages().list(userId=user_id, labelIds=['INBOX']).execute()
+    results = service.users().messages().list(userId=user_id, labelIds=['INBOX', 'UNREAD']).execute() #only read unread
     messages = results.get('messages', [])
     return messages
 
@@ -39,7 +39,6 @@ def get_message(service, user_id, msg_id):
     return message
 
 #scrape attatchments from an email and return the path to attatchment
-#what if multiple attatchments??<<<
 def get_attachments(service, user_id, msg_id):
     message = get_message(service, user_id, msg_id)
     for part in message['payload']['parts']:
@@ -51,6 +50,9 @@ def get_attachments(service, user_id, msg_id):
             with open(path, 'wb') as f:
                 f.write(data)
             return path
+
+def mark_as_read(service, user_id, msg_id):
+    service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ['UNREAD']}).execute()
 
 
 
@@ -70,7 +72,7 @@ def get_drive_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('YOUR CREDENTIALS FILE', DRIVE_SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file('/Users/johnbhaskar/Desktop/videos2drive/credentials.v2.videodrive.json', DRIVE_SCOPES)
             creds = flow.run_local_server(port=0)
         with open('token_drive.pickle', 'wb') as token:
             pickle.dump(creds, token)
@@ -100,6 +102,7 @@ def main():
             attachments_path = get_attachments(gmail_service, 'me', message['id'])
             if attachments_path:
                 upload_to_drive(drive_service, attachments_path)
+                mark_as_read(gmail_service, 'me', message['id'])
         time.sleep(60)  # Check for new emails every minute
 
 if __name__ == '__main__':
